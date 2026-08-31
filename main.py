@@ -9,7 +9,7 @@ from pyrogram.types import Message
 from pytgcalls import PyTgCalls
 from pytgcalls.exceptions import NoActiveGroupCall
 from pytgcalls.types import MediaStream
-from pytgcalls.types.stream import StreamAudioEnded
+from pytgcalls.types import StreamEnded
 
 import queues
 from config import (
@@ -29,6 +29,10 @@ logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
 )
 log = logging.getLogger("musicbot")
+
+# Bind one event loop before the clients are constructed.
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
 
 bot = Client(
     "musicbot",
@@ -275,7 +279,7 @@ async def queue_cmd(_, message: Message):
 
 @calls.on_update()
 async def stream_end_handler(_, update):
-    if isinstance(update, StreamAudioEnded):
+    if isinstance(update, StreamEnded):
         chat_id = update.chat_id
         old = queues.now(chat_id)
         if await play_next(chat_id):
@@ -331,4 +335,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    loop.run_until_complete(main())
